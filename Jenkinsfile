@@ -45,54 +45,47 @@ pipeline {
             }
         }
 
-        stage('单元测试') {
+        stage('Bazel 单元测试与覆盖率') {
             steps {
-                echo "正在进行单元测试..."
-                // 这一步如果失败（assert 报错），Pipeline 会直接变红停止
-                sh 'make test'
+                echo "使用 Bazel 运行测试..."
+                // --test_output=errors: 只有出错时才打印日志
+                // --combined_report=lcov: 生成 lcov 格式的报告
+                sh 'bazel coverage //:unit_test --combined_report=lcov --test_output=errors'
+            }
+        }
+
+        stage('生成报告 (LCOV)') {
+            steps {
+                echo "处理 Bazel 生成的覆盖率数据..."
+                script {
+                    // Bazel 生成的报告路径比较深，通常在 bazel-out/_coverage/_coverage_report.dat
+                    // 我们把它拷出来处理
+                    
+                    // 1. 找到 Bazel 的输出文件 (bazel-bin 是个快捷方式)
+                    sh 'cp bazel-out/_coverage/_coverage_report.dat coverage.info'
+                    
+                    // 2. 像之前一样过滤 (tests 和 系统库)
+                    // 注意：Bazel 路径可能包含 external/，需要根据实际情况调整，这里先跑通基本的
+                    sh 'lcov --remove coverage.info "/usr/*" "*/tests/*" --output-file coverage_filtered.info --ignore-errors unused'
+                    
+                    // 3. 生成 HTML
+                    sh 'genhtml coverage_filtered.info --output-directory coverage_report'
+                }
             }
             post {
                 always {
-                    // (可选) 如果你装了 HTML Publisher 插件，可以用这句：
-                    publishHTML (target: [
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'build/coverage_report',
-                        reportFiles: 'index.html',
-                        reportName: 'Coverage Report'
-                    ])
-                    
-                    // 暂时先归档成文件，让你能下载看
-                    archiveArtifacts artifacts: 'build/coverage_report/**/*', fingerprint: true
+                    archiveArtifacts artifacts: 'coverage_report/**/*', fingerprint: true
                 }
             }
         }
-
         
-        
-        stage('编译与质量检查') {
+        stage('Bazel 构建固件') {
             steps {
-                echo "开始编译并记录日志..."
+                echo "构建最终产物..."
+                sh 'bazel build //:firmware'
                 
-                // 1. 编译，并把输出重定向到 build.log 文件
-                // 2>&1 意思是把错误信息(stderr)也写进文件里
-                sh 'mkdir -p build'
-                sh 'make > build.log 2>&1'
-                
-                // 打印日志给 Jenkins 看一眼 (可选)
-                sh 'cat build.log'
-
-                echo "运行 Python 脚本进行质量门禁..."
-                // 2. 【Python 实战】调用脚本检查刚才生成的 build.log
-                sh 'python3 scripts/quality_check.py build.log'
-            }
-        }
-
-        stage('产物归档') {
-            steps {
-                // 把生成的 bin 文件存起来，这就叫“交付”
-                archiveArtifacts artifacts: 'build/*.bin', fingerprint: true
+                // Bazel 的产物在这里
+                sh 'ls -l bazel-bin/firmware'
             }
         }
 
