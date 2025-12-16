@@ -34,7 +34,8 @@ test: directory
 	lcov --capture --directory . --output-file $(BUILD_DIR)/coverage.info
 	
 	# 2. 过滤系统库 (我们不关心 stdio.h 的覆盖率，只关心我们自己的 src)
-	lcov --remove $(BUILD_DIR)/coverage.info '/usr/*' --output-file $(BUILD_DIR)/coverage_filtered.info --ignore-errors unused
+	# 2. 过滤系统库 和 测试代码本身
+	lcov --remove $(BUILD_DIR)/coverage.info '/usr/*' '*/tests/*' --output-file $(BUILD_DIR)/coverage_filtered.info --ignore-errors unused
 	
 	# 3. 生成 HTML 网页报告
 	genhtml $(BUILD_DIR)/coverage_filtered.info --output-directory $(BUILD_DIR)/coverage_report
