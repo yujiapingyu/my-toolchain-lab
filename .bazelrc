@@ -1,0 +1,5 @@
+# 开启远程缓存
+# host.docker.internal 指向你的宿主机 (Mac)
+# 如果是在 Mac 本机跑，用 localhost:9090
+build --remote_cache=http://host.docker.internal:9090
+test --remote_cache=http://host.docker.internal:9090
