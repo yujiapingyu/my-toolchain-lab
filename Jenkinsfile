@@ -8,6 +8,14 @@ pipeline {
                 sh 'gcc --version' // 检查有没有编译器
             }
         }
+
+        stage('单元测试') {
+            steps {
+                echo "正在进行单元测试..."
+                // 这一步如果失败（assert 报错），Pipeline 会直接变红停止
+                sh 'make test'
+            }
+        }
         
         stage('编译固件') {
             steps {

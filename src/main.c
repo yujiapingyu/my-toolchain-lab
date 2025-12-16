@@ -1,8 +1,9 @@
 #include <stdio.h>
+#include "engine.h"
 
 int main() {
-    // 模拟：打印当前软件版本
-    printf("Engine Control Unit (ECU) Starting...\n");
-    printf("Firmware Version: 1.0.0\n");
+    int temp = 90;
+    int rpm = calculate_rpm(temp);
+    printf("Current Temp: %d, RPM: %d\n", temp, rpm);
     return 0;
 }
