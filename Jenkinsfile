@@ -27,6 +27,24 @@ pipeline {
             }
         }
 
+        stage('静态代码分析') {
+            parallel { // 【亮点】并行执行，节省时间
+                stage('Cppcheck (逻辑/安全)') {
+                    steps {
+                        echo "运行 Cppcheck..."
+                        // 检查 src 文件夹
+                        sh 'cppcheck src/ --enable=all --error-exitcode=1 --suppress=missingIncludeSystem'
+                    }
+                }
+                stage('Python Lint (代码风格)') {
+                    steps {
+                        echo "运行风格检查..."
+                        sh 'python3 scripts/lint_style.py'
+                    }
+                }
+            }
+        }
+
         stage('单元测试') {
             steps {
                 echo "正在进行单元测试..."
