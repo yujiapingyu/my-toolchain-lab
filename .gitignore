@@ -1,1 +1,6 @@
 build/
+
+# bazel 输出文件
+bazel-*
+MODULE.bazel
+MODULE.bazel.lock
