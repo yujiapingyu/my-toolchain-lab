@@ -2,6 +2,20 @@ pipeline {
     agent any
 
     stages {
+
+        stage('初始化') {
+            steps {
+                scripts {
+                    // 获取 Git 的 commit message (简短版)
+                    def commitMsg = sh(script: "git log -1 --pretty=%s", returnStdout: true).trim()
+                    
+                    // 修改 Jenkins 界面上的构建名称
+                    // 效果： #12 (main) - Test Fail
+                    currentBuild.displayName = "#${env.BUILD_NUMBER} (${env.BRANCH_NAME}) - ${commitMsg}"
+                }
+            }
+        }
+
         stage('环境检查') {
             steps {
                 sh 'echo "当前构建分支: ${BRANCH_NAME}"'
