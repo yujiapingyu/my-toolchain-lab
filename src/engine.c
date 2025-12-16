@@ -6,6 +6,6 @@ int calculate_rpm(int temperature) {
     if (temperature > 100) {
         return 1000; // 过热保护
     } else {
-        return 2000; // 正常行驶
+        return 1000; // 正常行驶
     }
 }
