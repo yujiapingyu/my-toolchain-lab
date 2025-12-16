@@ -5,6 +5,8 @@
 int calculate_rpm(int temperature) {
     if (temperature > 100) {
         return 1000; // 过热保护
+    } else if (temperature < -50) { // <--- 新增这个分支
+        return 0; // 极寒模式，停机
     } else {
         return 2000; // 正常行驶
     }
