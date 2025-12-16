@@ -33,7 +33,25 @@ pipeline {
                 // 这一步如果失败（assert 报错），Pipeline 会直接变红停止
                 sh 'make test'
             }
+            post {
+                always {
+                    // (可选) 如果你装了 HTML Publisher 插件，可以用这句：
+                    publishHTML (target: [
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'build/coverage_report',
+                        reportFiles: 'index.html',
+                        reportName: 'Coverage Report'
+                    ])
+                    
+                    // 暂时先归档成文件，让你能下载看
+                    archiveArtifacts artifacts: 'build/coverage_report/**/*', fingerprint: true
+                }
+            }
         }
+
+        
         
         stage('编译与质量检查') {
             steps {
