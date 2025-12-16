@@ -35,10 +35,21 @@ pipeline {
             }
         }
         
-        stage('编译固件') {
+        stage('编译与质量检查') {
             steps {
-                // 模拟：这里我们依然用 gcc，但在公司里你会配置成 arm-gcc
-                sh 'make all'
+                echo "开始编译并记录日志..."
+                
+                // 1. 编译，并把输出重定向到 build.log 文件
+                // 2>&1 意思是把错误信息(stderr)也写进文件里
+                sh 'mkdir -p build'
+                sh 'make > build.log 2>&1'
+                
+                // 打印日志给 Jenkins 看一眼 (可选)
+                sh 'cat build.log'
+
+                echo "运行 Python 脚本进行质量门禁..."
+                // 2. 【Python 实战】调用脚本检查刚才生成的 build.log
+                sh 'python3 scripts/quality_check.py build.log'
             }
         }
 
