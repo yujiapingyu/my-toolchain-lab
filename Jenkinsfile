@@ -5,13 +5,17 @@ pipeline {
 
         stage('初始化') {
             steps {
-                scripts {
+                // 【Groovy 实战】
+                // script 块允许你写复杂的 Groovy 代码
+                script {
                     // 获取 Git 的 commit message (简短版)
                     def commitMsg = sh(script: "git log -1 --pretty=%s", returnStdout: true).trim()
                     
                     // 修改 Jenkins 界面上的构建名称
                     // 效果： #12 (main) - Test Fail
                     currentBuild.displayName = "#${env.BUILD_NUMBER} (${env.BRANCH_NAME}) - ${commitMsg}"
+                    
+                    echo "构建名称已更新，看起来更专业了！"
                 }
             }
         }
