@@ -47,10 +47,20 @@ pipeline {
 
         stage('Bazel 单元测试与覆盖率') {
             steps {
-                echo "使用 Bazel 运行测试..."
-                // --test_output=errors: 只有出错时才打印日志
-                // --combined_report=lcov: 生成 lcov 格式的报告
-                sh 'bazel coverage //:unit_test --combined_report=lcov --test_output=errors'
+                echo "使用 Bazel 运行测试 (切换为非Root用户)..."
+                sh '''
+                    # 1. 赋予 jenkins 用户对当前工作区的读写权限
+                    # (因为 Git 拉取下来时是 root 权限)
+                    chown -R jenkins:jenkins .
+                    
+                    # 2. 确保 Bazel 缓存目录有权限
+                    mkdir -p /var/jenkins_home/.cache
+                    chown -R jenkins:jenkins /var/jenkins_home/.cache
+
+                    # 3. 使用 jenkins 用户身份运行 bazel
+                    # su -s /bin/bash jenkins -c "你的命令"
+                    su -s /bin/bash jenkins -c "bazel coverage //:unit_test --combined_report=lcov --test_output=errors"
+                '''
             }
         }
 
@@ -82,9 +92,10 @@ pipeline {
         stage('Bazel 构建固件') {
             steps {
                 echo "构建最终产物..."
-                sh 'bazel build //:firmware'
+                // 同样切换用户运行
+                sh 'su -s /bin/bash jenkins -c "bazel build //:firmware"'
                 
-                // Bazel 的产物在这里
+                // 验证产物 (ls 不需要切用户，root 也能看)
                 sh 'ls -l bazel-bin/firmware'
             }
         }
